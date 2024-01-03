@@ -11,6 +11,7 @@
 //    int day = 0;
 //    int month = 0;
 //    int year = 0;
+//
 //    cout << "Enter day: " << endl;
 //    cin >> day;
 //    if (!(day > minDayValue && day <= maxDayValue)) {
@@ -21,11 +22,12 @@
 //    cin >> month;
 //    if (!(month > minMonthValue && month <= maxMonthValue)) {
 //        cout << "Incorrect month. Must be in a range of (01-12)";
-//        return -1;
+//        return -2;
 //    }
 //    cout << "Enter year: " << endl;
 //    cin >> year;
 //    int sum = 0;
+//
 //    if (day < 10) {
 //        sum += day;
 //    } else {
@@ -48,6 +50,7 @@
 //    }
 //    int result = sum / 10;
 //    result += sum % 10;
+//
 //    cout << "Fate number is " << result;
 //    return 0;
 //}
