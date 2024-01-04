@@ -7,7 +7,7 @@ double fibonacci(int index);
 int main() {
     int index = 0;
     cout << "Using this program you found out the n-th number of fibonacci function." << endl <<
-         "Example: 5 -> 3." << endl;
+         "Example: 5 -> 5." << endl;
     cout << "Enter a number: " << endl;
     cin >> index;
     cout << "The " << index << "-th number of fibonacci function is " << fibonacci(index);
@@ -19,9 +19,13 @@ double fibonacci(int index) {
     double secondNumber = 1;
     double result = 0;
 
+    if (index == 0) {
+        return 0;
+    }
+
     int counter = 0;
     while (counter <= index) {
-        if (counter <= 2) {
+        if (counter < 2) {
             counter++;
             continue;
         }
