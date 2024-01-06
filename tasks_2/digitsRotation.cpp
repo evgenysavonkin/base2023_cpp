@@ -27,7 +27,7 @@
 //
 //bool isRotating(long number) {
 //    int prev = number % 2;
-//    number = (int) number / 2;
+//    number = number / 2;
 //
 //    while (number > 0) {
 //        if (prev == number % 2) {
@@ -35,7 +35,7 @@
 //        }
 //
 //        prev = number % 2;
-//        number = (long) (number / 2);
+//        number = number / 2;
 //    }
 //
 //    return true;
@@ -53,7 +53,7 @@
 //        if (remain == 1) {
 //            result += (long) pow(10, numberOfDigitsCopy);
 //        }
-//        number = (long) (number / 2);
+//        number = number / 2;
 //    }
 //
 //    return reverseNumber(result, numberOfDigits);
@@ -63,7 +63,7 @@
 //    int numberOfDigits = 0;
 //
 //    while (number > 0) {
-//        number = (long) (number / 2);
+//        number = number / 2;
 //        numberOfDigits++;
 //    }
 //
@@ -76,7 +76,7 @@
 //    while (number > 0) {
 //        numberOfDigits--;
 //        int remain = number % 10;
-//        resultNumber += remain * (int) pow(10, numberOfDigits);
+//        resultNumber += remain * (long) pow(10, numberOfDigits);
 //        number /= 10;
 //    }
 //

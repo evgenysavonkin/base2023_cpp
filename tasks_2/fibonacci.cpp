@@ -6,7 +6,7 @@ double fibonacci(int index);
 
 int main() {
     int index = 0;
-    cout << "Using this program you found out the n-th number of fibonacci function." << endl <<
+    cout << "Using this program you can found out the n-th number of fibonacci function." << endl <<
          "Example: 5 -> 5." << endl;
     cout << "Enter a number: " << endl;
     cin >> index;
