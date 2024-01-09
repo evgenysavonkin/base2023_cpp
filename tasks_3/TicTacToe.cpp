@@ -26,43 +26,24 @@ char gameField[X_SIZE][Y_SIZE]{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
 int cornerCellNumbers[4]{1, 3, 7, 9};
 
 void printField(char field[X_SIZE][Y_SIZE]);
-
 void startGameWithUser();
-
 void processUserUnitOfGame(char unit);
-
 void userTurnToAction();
-
 void machineTurnToAction();
-
 bool isCellFree(int cellNumber);
-
 void processGame();
-
 bool isSomeoneWon();
-
 int getIValueFromCellNumber(int cellNumber);
-
 int getJValueFromCellNumber(int cellNumber);
-
 void takeCell(int cellNumber, char unit);
-
 bool isDrawGame();
-
 bool isCenterTaken();
-
 bool tryToTakeCorner();
-
 bool checkHorizontalWinningProbability(char unit, bool loosingDetectionEnabled);
-
 bool checkVerticalWinningProbability(char unit, bool loosingDetectionEnabled);
-
 bool checkDiagonalWinningProbability(char unit, bool loosingDetectionEnabled);
-
 bool checkWinningProbability(char unit, bool loosingDetectionEnabled);
-
 void resetGame();
-
 void resetGameField();
 
 int main() {
@@ -70,7 +51,7 @@ int main() {
     return 0;
 }
 
-void resetGameField(){
+void resetGameField() {
     for (int i = 0; i < Y_SIZE; ++i) {
         for (int j = 0; j < X_SIZE; ++j) {
             gameField[i][j] = ' ';
@@ -179,13 +160,16 @@ bool isDrawGame() {
 
 void processGame() {
 
+    int counter = 0;
     while (true) {
         if (isSomeoneWon() || isDrawGame()) {
             printField(gameField);
             break;
         }
 
-        printField(gameField);
+        if (counter > 0) {
+            printField(gameField);
+        }
 
         if (isUserActing) {
             userTurnToAction();
@@ -195,6 +179,8 @@ void processGame() {
             numberOfMachineActions++;
             isUserActing = true;
         }
+
+        counter++;
     }
 }
 
