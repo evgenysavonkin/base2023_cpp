@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <windows.h>
 
 using namespace std;
 
@@ -10,20 +11,27 @@ const string HOR_DELIMITER = "---";
 const char X_CHAR = 'X';
 const char O_CHAR = 'O';
 const int MAX_NUMBER_OF_GAMES = 6;
-const int MAX_NUMBER_OF_GAMES_FOR_EACH_COMMAND = 3;
 const int WINNING_NUM_POINTS = 3;
 const int TIE_NUM_POINTS = 1;
-const int LOOSING_NUM_POINTS = 0;
 
+int numberOfPointsForUser = 0;
+int numberOfPointsForMachine = 0;
+bool isTournament = false;
+int numberOfUserGames = 0;
+int numberOfMachineGames = 0;
 bool isTie = false;
 int numberOfMachineActions = 0;
+int numberOfUserActions = 0;
 char userUnit = 'X';
 char machineUnit = 'X';
 bool isUserWon = false;
+bool isMachineWon = false;
 bool isUserActing = false;
 char numbersField[X_SIZE][Y_SIZE]{'1', '2', '3', '4', '5', '6', '7', '8', '9'};
 char gameField[X_SIZE][Y_SIZE]{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
 int cornerCellNumbers[4]{1, 3, 7, 9};
+int userCellsNotAllowedArr[X_SIZE]{0, 0, 0};
+int machineCellsNotAllowedArr[X_SIZE]{0, 0, 0};
 
 void printField(char field[X_SIZE][Y_SIZE]);
 void startGameWithUser();
@@ -45,10 +53,63 @@ bool checkDiagonalWinningProbability(char unit, bool loosingDetectionEnabled);
 bool checkWinningProbability(char unit, bool loosingDetectionEnabled);
 void resetGame();
 void resetGameField();
+bool isCellAllowed(int cellNumber, int arr[]);
+void resetCellsNotAllowedArr(int arr[]);
+void printCellsNotAllowed(int arr[]);
+void addToCellsNotAllowedArr(int cellNumber, bool isUser);
+void processTournamentChoice(char choice);
+bool tryToTakeCornerWithTournament();
+int getRandomNumberFromOneToNine();
 
 int main() {
+    char userInput;
+    cout << "Do you want to turn on tournament mode? (Y/N)" << endl;
+    cin >> userInput;
+    processTournamentChoice(userInput);
     startGameWithUser();
     return 0;
+}
+
+void processTournamentChoice(char choice) {
+    if (choice == 'Y' || choice == 'y') {
+        isTournament = true;
+        cout << "Tournament mode is enabled." << endl;
+        return;
+    }
+
+    cout << "Tournament mode is disabled." << endl;
+    isTournament = false;
+}
+
+bool isCellAllowed(int cellNumber, int arr[]) {
+    for (int i = 0; i < X_SIZE; ++i) {
+        if (arr[i] == cellNumber) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void printCellsNotAllowed(int arr[]) {
+    for (int i = 0; i < X_SIZE; ++i) {
+        cout << arr[i] << " ";
+    }
+}
+
+void addToCellsNotAllowedArr(int cellNumber, bool isUser) {
+    if (isUser) {
+        userCellsNotAllowedArr[numberOfUserGames] = cellNumber;
+        return;
+    }
+
+    machineCellsNotAllowedArr[numberOfMachineGames] = cellNumber;
+}
+
+void resetCellsNotAllowedArr(int arr[]) {
+    for (int i = 0; i < X_SIZE; ++i) {
+        arr[i] = 0;
+    }
 }
 
 void resetGameField() {
@@ -63,17 +124,21 @@ void resetGame() {
     resetGameField();
     isTie = false;
     numberOfMachineActions = 0;
+    numberOfUserActions = 0;
     userUnit = 'X';
     machineUnit = 'X';
     isUserWon = false;
+    isMachineWon = false;
     isUserActing = false;
 }
 
-void startGameWithUser() {
-    char userUnitChoice;
-    char exitChoice;
+void processGameCommands(char userUnitChoice, char exitChoice) {
+    int counter = 0;
 
     while (true) {
+        if (isTournament) {
+            counter++;
+        }
         cout << endl << endl << "Game: tic tac toe." << endl;
         cout << "The rules assign a unique number to each cell. " << endl;
 
@@ -84,7 +149,6 @@ void startGameWithUser() {
         cin >> userUnitChoice;
 
         processUserUnitOfGame(userUnitChoice);
-
         processGame();
 
         if (isTie) {
@@ -92,6 +156,15 @@ void startGameWithUser() {
         } else {
             cout << endl << "We have a winner!" << endl;
             cout << "Congratulations, " << (isUserWon ? "Human" : "AI") << endl;
+
+            if (isUserWon) {
+                numberOfPointsForUser += WINNING_NUM_POINTS;
+            } else if (isMachineWon) {
+                numberOfPointsForMachine += WINNING_NUM_POINTS;
+            } else {
+                numberOfPointsForUser += TIE_NUM_POINTS;
+                numberOfPointsForMachine += TIE_NUM_POINTS;
+            }
         }
 
         cout << "Do you want to continue? (Y/N)" << endl;
@@ -102,8 +175,50 @@ void startGameWithUser() {
         }
 
         resetGame();
+
+        if (isTournament) {
+            if (counter == MAX_NUMBER_OF_GAMES) {
+                break;
+            }
+            if (numberOfUserGames == 2) {
+                resetCellsNotAllowedArr(userCellsNotAllowedArr);
+                numberOfUserGames = 0;
+                continue;
+            }
+            if (numberOfMachineGames == 2) {
+                resetCellsNotAllowedArr(machineCellsNotAllowedArr);
+                numberOfMachineGames = 0;
+                continue;
+            }
+
+            userUnitChoice == X_CHAR ? numberOfUserGames++ : numberOfMachineGames++;
+        }
+    }
+}
+
+void startGameWithUser() {
+    char userUnitChoice;
+    char exitChoice;
+
+    if (isTournament) {
+        processGameCommands(userUnitChoice, exitChoice);
+
+        if (numberOfPointsForUser == numberOfPointsForMachine) {
+            cout << endl <<"The tournament is over! We have a tie!" << endl;
+            return;
+        }
+        cout << endl << "The tournament is over! The winner is ";
+        if (numberOfPointsForUser > numberOfPointsForMachine) {
+            cout << "Human." << endl;
+        } else if (numberOfPointsForMachine > numberOfPointsForUser) {
+            cout << "AI." << endl;
+        }
+        cout << "Human points: " << numberOfPointsForUser << endl;
+        cout << "AI points: " << numberOfPointsForMachine << endl;
+        return;
     }
 
+    processGameCommands(userUnitChoice, exitChoice);
 }
 
 bool isSomeoneWon() {
@@ -139,6 +254,7 @@ bool isSomeoneWon() {
         (gameField[2][0] == currMachineUnit && gameField[1][1] == currMachineUnit &&
          gameField[0][2] == currMachineUnit)) {
 
+        isMachineWon = true;
         return true;
     }
 
@@ -159,20 +275,21 @@ bool isDrawGame() {
 }
 
 void processGame() {
-
     int counter = 0;
+
     while (true) {
         if (isSomeoneWon() || isDrawGame()) {
             printField(gameField);
             break;
         }
-
         if (counter > 0) {
+            printField(numbersField);
+            cout << endl;
             printField(gameField);
         }
-
         if (isUserActing) {
             userTurnToAction();
+            numberOfUserActions++;
             isUserActing = false;
         } else {
             machineTurnToAction();
@@ -184,6 +301,25 @@ void processGame() {
     }
 }
 
+bool tryToTakeCornerWithTournament() {
+    while (true) {
+        int randomNumber = (rand() % 4); // 0 -> 3
+        int randomCell = cornerCellNumbers[randomNumber];
+
+        if (isCellFree(randomCell) && isCellAllowed(randomCell, machineCellsNotAllowedArr)) {
+            takeCell(randomCell, machineUnit);
+            addToCellsNotAllowedArr(randomCell, false);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+int getRandomNumberFromOneToNine() {
+    return (rand() % 9) + 1;
+}
+
 void machineTurnToAction() {
     cout << endl << "AI is thinking what cell to take.." << endl;
 
@@ -193,29 +329,109 @@ void machineTurnToAction() {
     if (checkWinningProbability(userUnit, true)) {
         return;
     }
-    if (!isCenterTaken()) {
-        takeCell(5, machineUnit);
-        return;
-    }
-    if (numberOfMachineActions == 0 && isCenterTaken()) {
-        tryToTakeCorner();
-        return;
-    }
+    if (isTournament) {
+        if (machineUnit == X_CHAR && numberOfMachineActions == 0) {
+            if (!isCenterTaken() && isCellAllowed(5, machineCellsNotAllowedArr)) {
+                takeCell(5, machineUnit);
+                addToCellsNotAllowedArr(5, false);
+                return;
+            }
+            if (tryToTakeCornerWithTournament()) {
+                return;
+            }
 
-    if (checkWinningProbability(machineUnit, false)) {
-        return;
-    }
+            int randomCell = getRandomNumberFromOneToNine();
 
-    int randomCell = (rand() % 9) + 1;
+            while (true) {
+                if (isCellFree(randomCell) && isCellAllowed(randomCell, machineCellsNotAllowedArr)) {
+                    takeCell(randomCell, machineUnit);
+                    isUserActing = true;
+                    return;
+                }
+
+                randomCell = getRandomNumberFromOneToNine();
+            }
+        }
+        if (!isCenterTaken()) {
+            takeCell(5, machineUnit);
+            return;
+        }
+        if ((numberOfMachineActions == 0 && isCenterTaken()) || isCenterTaken()) {
+            if (tryToTakeCorner()) {
+                return;
+            }
+        }
+        if (checkWinningProbability(machineUnit, false)) {
+            return;
+        }
+
+        int randomCell = getRandomNumberFromOneToNine();
+        while (true) {
+            if (isCellFree(randomCell)) {
+                takeCell(randomCell, machineUnit);
+                isUserActing = true;
+                break;
+            }
+
+            randomCell = getRandomNumberFromOneToNine();
+        }
+    } else {
+        if (!isCenterTaken()) {
+            takeCell(5, machineUnit);
+            return;
+        }
+        if ((numberOfMachineActions == 0 && isCenterTaken()) || isCenterTaken()) {
+            if (tryToTakeCorner()) {
+                return;
+            }
+        }
+        if (checkWinningProbability(machineUnit, false)) {
+            return;
+        }
+
+        int randomCell = getRandomNumberFromOneToNine();
+        while (true) {
+            if (isCellFree(randomCell)) {
+                takeCell(randomCell, machineUnit);
+                isUserActing = true;
+                break;
+            }
+            randomCell = getRandomNumberFromOneToNine();
+        }
+    }
+}
+
+void userTurnToAction() {
+    int cellNumber = 0;
+    int counter = 0;
 
     while (true) {
-        if (isCellFree(randomCell)) {
-            takeCell(randomCell, machineUnit);
-            isUserActing = true;
+        cout << endl << "Enter a number of cell: " << endl;
+        cin >> cellNumber;
+
+        if (isTournament) {
+            if (userUnit == X_CHAR && numberOfUserActions == 0) {
+                if (isCellAllowed(cellNumber, userCellsNotAllowedArr)) {
+                    takeCell(cellNumber, userUnit);
+                    addToCellsNotAllowedArr(cellNumber, true);
+                    break;
+                }
+
+                cout << "The first move should not be repeated with the previous ones!" << endl;
+                continue;
+            }
+        }
+
+        if (isCellFree(cellNumber)) {
+            takeCell(cellNumber, userUnit);
             break;
         }
-        randomCell = (rand() % 9) + 1;
+
+        cout << "Cell by number " << cellNumber << " is already taken!" << endl;
+        counter++;
     }
+
+    isUserActing = false;
 }
 
 int getIValueFromCellNumber(int cellNumber) {
@@ -258,24 +474,6 @@ void takeCell(int cellNumber, char unit) {
     gameField[iPos][jPos] = unit;
 }
 
-void userTurnToAction() {
-    int cellNumber = 0;
-
-    while (true) {
-        cout << endl << "Enter a number of cell: " << endl;
-        cin >> cellNumber;
-
-        if (isCellFree(cellNumber)) {
-            takeCell(cellNumber, userUnit);
-            break;
-        }
-
-        cout << "Cell by number " << cellNumber << "is already taken!" << endl;
-    }
-
-    isUserActing = false;
-}
-
 bool isCenterTaken() {
     if (isCellFree(5)) {
         return false;
@@ -285,15 +483,18 @@ bool isCenterTaken() {
 }
 
 bool tryToTakeCorner() {
-    int randomNumber = (rand() % 4) + 1;
-    int randomCell = cornerCellNumbers[randomNumber];
+    while (true) {
+        int randomNumber = (rand() % 4);
+        int randomCell = cornerCellNumbers[randomNumber];
 
-    if (isCellFree(randomCell)) {
-        takeCell(randomCell, machineUnit);
-        return true;
+        if (isCellFree(randomCell)) {
+            takeCell(randomCell, machineUnit);
+            return true;
+        }
+
+        return false;
     }
 
-    return false;
 }
 
 bool checkHorizontalWinningProbability(char unit, bool loosingDetectionEnabled) {
@@ -434,14 +635,24 @@ void processUserUnitOfGame(char unit) {
 }
 
 void printField(char field[X_SIZE][Y_SIZE]) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     cout << endl;
     for (int i = 0; i < Y_SIZE; ++i) {
         for (int j = 0; j < X_SIZE; ++j) {
+            if (field[i][j] == X_CHAR) {
+                SetConsoleTextAttribute(hConsole, 1);
+            } else if (field[i][j] == O_CHAR) {
+                SetConsoleTextAttribute(hConsole, 4);
+            }
+
             if (j == X_SIZE - 1) {
                 cout << field[i][j];
                 continue;
             }
-            cout << field[i][j] << VERT_DELIMITER;
+
+            cout << field[i][j];
+            SetConsoleTextAttribute(hConsole, 7);
+            cout << VERT_DELIMITER;
         }
 
         cout << endl;
@@ -451,9 +662,12 @@ void printField(char field[X_SIZE][Y_SIZE]) {
 
         int counter = 0;
         while (counter < X_SIZE) {
+            SetConsoleTextAttribute(hConsole, 7);
             cout << HOR_DELIMITER;
             counter++;
         }
         cout << endl;
     }
+
+    SetConsoleTextAttribute(hConsole, 7);
 }
