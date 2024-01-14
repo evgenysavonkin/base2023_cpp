@@ -17,7 +17,7 @@
 //        return -1;
 //    }
 //
-//    cout << "Result: " << result;
+//    cout << "Result of evaluating the expression:" << result << endl;
 //    return 0;
 //}
 //
