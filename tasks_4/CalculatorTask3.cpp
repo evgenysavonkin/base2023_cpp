@@ -4,7 +4,7 @@
 
 using namespace std;
 
-const string arithmeticExpressionToEvaluate = "2-1+8/2*4+3*7";
+const string arithmeticExpressionToEvaluate = "2+1-8/2*4+3*7";
 
 double calculateExpression(string expression);
 string convertToStringNumberWithoutZeros(double number);
@@ -61,6 +61,23 @@ bool isOneNumber(string expression) {
     return strings.size() == 1;
 }
 
+double getSecondNumberFromExpression(string expression) {
+    list<double> numbers;
+    list<string> numbersStr = split(std::move(expression));
+
+    int counter = 0;
+    for (const auto &str: numbersStr) {
+        if (counter == 2) {
+            break;
+        }
+        double currNumber = atof(str.c_str());
+        numbers.push_back(currNumber);
+        counter++;
+    }
+
+    return numbers.back();
+}
+
 double calculateNumbers(string expression) {
     double result = 0.0;
     while (!isOneNumber(expression)) {
@@ -70,6 +87,27 @@ double calculateNumbers(string expression) {
         for (int i = 0; expression[i] != '\0'; ++i) {
             string leftSide;
             string rightSide;
+            if (expression[i] == '-' && i == 0) {
+                rightSide.append(expression.substr(i + 1, expression.length()));
+                double firstNumber = 0 - getFirstNumberFromExpression(rightSide);
+                double secondNumber = getSecondNumberFromExpression(rightSide);
+                int indexOfMathAction = convertToStringNumberWithoutZeros(firstNumber).length();
+                int indexToMove = indexOfMathAction + convertToStringNumberWithoutZeros(secondNumber).length();
+                double res = 0.0;
+                if (expression[indexOfMathAction] == '+') {
+                    res = firstNumber + secondNumber;
+                } else if (expression[indexOfMathAction] == '-') {
+                    res = firstNumber - secondNumber;
+                } else { ;
+                }
+                result = res;
+                tempStr.append(convertToStringNumberWithoutZeros(result));
+                tempStr.append(indexToMove, expression.length());
+                expression = tempStr;
+                tempStr.clear();
+                utilStr.clear();
+                break;
+            }
             if (expression[i] == '-' || expression[i] == '+') {
                 leftSide.append(expression.substr(0, i));
                 rightSide.append(expression.substr(i + 1, expression.length()));
@@ -80,6 +118,7 @@ double calculateNumbers(string expression) {
                     res = firstNumber - secondNumber;
                 } else if (expression[i] == '+') {
                     res = firstNumber + secondNumber;
+                } else { ;
                 }
                 result = res;
                 tempStr.append(convertToStringNumberWithoutZeros(result));
@@ -166,7 +205,6 @@ double calculateExpression(string expression) {
 
                 expression.assign(utilStr);
                 utilStr.clear();
-                leftStr.clear();
                 leftStr.clear();
                 rightStr.clear();
                 firstNumberFromRightStr.clear();
